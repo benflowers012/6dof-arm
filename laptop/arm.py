@@ -13,7 +13,8 @@ import serial  # noqa: E402
 import serial.tools.list_ports  # noqa: E402
 
 from arm_core import (Player, Recorder, any_active, clamp_pose, format_pose, home_pose,  # noqa: E402
-                      latest_recording, load_program, parse_limits, save_recording, step_teleop)
+                      latest_recording, load_program, parse_limits, parse_pose, save_recording,
+                      step_teleop)
 
 # ===== Controller mapping (SDL2 Xbox layout on Windows; change if a control does the wrong thing) =====
 AXIS_LX, AXIS_LY, AXIS_RX, AXIS_RY, AXIS_LT, AXIS_RT = 0, 1, 2, 3, 4, 5
@@ -40,29 +41,40 @@ def find_port() -> str:
 
 class Link:
     def __init__(self, port: str):
-        self.ser = serial.Serial(port, 115200, timeout=0.2)  # opening resets the Uno
-        self.limits = None
-        ready = False
+        self.ser = serial.Serial()
+        self.ser.port, self.ser.baudrate, self.ser.timeout = port, 115200, 0.2
+        # DTR off: don't reset the Uno, so it keeps holding its pose instead of snapping to home.
+        self.ser.dtr = False
+        self.ser.open()
+        self.limits = self.start_pose = None
         deadline = time.monotonic() + 5
-        while time.monotonic() < deadline and not (ready and self.limits):
+        next_ask = 0.0
+        while time.monotonic() < deadline and not (self.limits and self.start_pose):
+            if time.monotonic() >= next_ask:  # re-ask in case the Uno was still booting
+                self.ser.write(b"?\n")
+                next_ask = time.monotonic() + 0.5
             line = self.ser.readline().decode(errors="ignore").strip()
-            if line == "READY":
-                ready = True
-            elif line.startswith("LIMITS"):
-                try:
+            try:
+                if line.startswith("LIMITS"):
                     self.limits = parse_limits(line)
-                except ValueError:
-                    pass
-        if not (ready and self.limits):
-            sys.exit("Uno didn't report READY/LIMITS — is arm.ino uploaded?")
+                elif line.startswith("POSE"):
+                    self.start_pose = parse_pose(line)
+            except ValueError:
+                pass
+        if not (self.limits and self.start_pose):
+            sys.exit("Uno didn't answer with LIMITS/POSE — is arm.ino uploaded? Wrong port? Try --port.")
         print(f"Connected on {port}. Limits: {self.limits}")
 
     def send(self, pose):
-        self.ser.write(format_pose(pose).encode())
+        try:
+            self.ser.write(format_pose(pose).encode())
+        except serial.SerialException:
+            sys.exit("Lost the USB connection to the Uno — arm will freeze.")
 
 
 class DryLink:
     limits = DRY_LIMITS
+    start_pose = home_pose(DRY_LIMITS)
 
     def __init__(self):
         self.n = 0
@@ -99,7 +111,7 @@ def main():
     js = open_controller()
     link = DryLink() if args.dry_run else Link(args.port or find_port())
     limits = link.limits
-    pose = home_pose(limits)
+    pose = clamp_pose(link.start_pose, limits)  # start where the arm already is: no jump
     player = play_start = recorder = None
     clock = pygame.time.Clock()
     last = time.monotonic()

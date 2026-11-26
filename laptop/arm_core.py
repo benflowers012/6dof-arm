@@ -17,6 +17,16 @@ def parse_limits(line: str) -> Limits:
     return [tuple(nums[i:i + 3]) for i in range(0, 18, 3)]
 
 
+def parse_pose(line: str) -> list[float]:
+    parts = line.split()
+    if len(parts) != 7 or parts[0] != "POSE":
+        raise ValueError(f"not a POSE line: {line!r}")
+    try:
+        return [int(p) for p in parts[1:]]
+    except ValueError:
+        raise ValueError(f"bad number in POSE line: {line!r}") from None
+
+
 def clamp_pose(pose: list[float], limits: Limits) -> list[float]:
     return [min(max(a, lo), hi) for a, (lo, hi, _) in zip(pose, limits)]
 
@@ -94,11 +104,11 @@ def load_program(path: Path) -> list[dict]:
             len(f["pose"]) == 6 and all(isinstance(a, (int, float)) for a in f["pose"])
             and isinstance(f["t"], (int, float))
             for f in frames
-        )
+        ) and all(a["t"] < b["t"] for a, b in zip(frames, frames[1:]))
     except (KeyError, TypeError, json.JSONDecodeError) as e:
         raise ValueError(f"{path.name}: {e}") from None
     if not ok:
-        raise ValueError(f"{path.name}: needs a non-empty 'frames' list of {{t, pose[6]}}")
+        raise ValueError(f"{path.name}: needs a non-empty 'frames' list of {{t, pose[6]}} with t increasing")
     return frames
 
 

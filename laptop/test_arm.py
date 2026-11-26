@@ -86,6 +86,74 @@ def test_flip_file_is_valid():
     assert all(a["t"] < b["t"] for a, b in zip(frames, frames[1:]))
 
 
+def test_parse_pose():
+    assert parse_pose("POSE 90 150 20 160 0 180") == [90, 150, 20, 160, 0, 180]
+    for bad in ["POSE 1 2", "LIMITS 1 2 3 4 5 6", "POSE a b c d e f"]:
+        try:
+            parse_pose(bad)
+            assert False, bad
+        except ValueError:
+            pass
+
+
+def test_program_times_must_increase():
+    import json, tempfile
+    from pathlib import Path
+
+    f = Path(tempfile.mkdtemp()) / "flip.json"
+    f.write_text(json.dumps({"frames": [{"t": 0, "pose": [90] * 6},
+                                        {"t": 6.0, "pose": [90] * 6},
+                                        {"t": 5.5, "pose": [90] * 6}]}))
+    try:
+        load_program(f)
+        assert False, "out-of-order t accepted"
+    except ValueError as e:
+        assert "flip.json" in str(e)
+
+
+def test_unplugged_usb_exits_cleanly():
+    import serial
+    import arm
+
+    class DeadPort:
+        def write(self, data):
+            raise serial.SerialException("device disconnected")
+
+    link = object.__new__(arm.Link)
+    link.ser = DeadPort()
+    try:
+        link.send([90] * 6)
+        assert False, "no exit"
+    except SystemExit as e:
+        assert "USB" in str(e.code)
+
+
+def test_connect_starts_from_current_pose_without_reset():
+    import arm
+
+    class FakeUno:  # an Uno that is NOT reset: silent until asked "?"
+        def __init__(self):
+            self.out, self.dtr_at_open = [], None
+
+        def open(self):
+            self.dtr_at_open = self.dtr
+
+        def write(self, data):
+            if data == b"?\n":
+                self.out += [LIM_LINE.encode() + b"\n", b"POSE 150 40 90 90 0 90\n"]
+
+        def readline(self):
+            return self.out.pop(0) if self.out else b""
+
+    real, arm.serial.Serial = arm.serial.Serial, FakeUno
+    try:
+        link = arm.Link("COM_TEST")
+    finally:
+        arm.serial.Serial = real
+    assert link.ser.dtr_at_open is False  # opening must not reset the Uno
+    assert link.limits == LIM and link.start_pose == [150, 40, 90, 90, 0, 90]
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

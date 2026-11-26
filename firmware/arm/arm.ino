@@ -31,7 +31,21 @@ void writeServo(int i) {
   pwm.writeMicroseconds(i, J[i].pulseMin + (long)(J[i].pulseMax - J[i].pulseMin) * cur[i] / 180);
 }
 
+void printStatus() {  // "LIMITS lo hi home x6" then "POSE a0..a5" (where the servos are now)
+  Serial.print("LIMITS");
+  for (int i = 0; i < 6; i++) {
+    Serial.print(' '); Serial.print(J[i].lo);
+    Serial.print(' '); Serial.print(J[i].hi);
+    Serial.print(' '); Serial.print(J[i].home);
+  }
+  Serial.println();
+  Serial.print("POSE");
+  for (int i = 0; i < 6; i++) { Serial.print(' '); Serial.print((int)(cur[i] + 0.5)); }
+  Serial.println();
+}
+
 void handleLine() {
+  if (strcmp(buf, "?") == 0) { printStatus(); return; }  // laptop asking where we are
   int a[6];
   if (sscanf(buf, "P %d %d %d %d %d %d", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5]) != 6) return;
   for (int i = 0; i < 6; i++) tgt[i] = constrain(a[i], J[i].lo, J[i].hi);
@@ -60,17 +74,12 @@ void setup() {
   pwm.setOscillatorFrequency(OSC_HZ);
   pwm.setPWMFreq(SERVO_HZ);
   for (int i = 0; i < 6; i++) {
+    J[i].home = constrain(J[i].home, J[i].lo, J[i].hi);  // home can never sit outside the limits
     cur[i] = tgt[i] = J[i].home;
     writeServo(i);
   }
   Serial.println("READY");
-  Serial.print("LIMITS");
-  for (int i = 0; i < 6; i++) {
-    Serial.print(' '); Serial.print(J[i].lo);
-    Serial.print(' '); Serial.print(J[i].hi);
-    Serial.print(' '); Serial.print(J[i].home);
-  }
-  Serial.println();
+  printStatus();
   lastStep = millis();
 }
 

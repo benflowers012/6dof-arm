@@ -37,7 +37,7 @@ python arm.py --port COM5   # if it picks the wrong port
 python arm.py --dry-run     # no arm needed: prints the angles it would send
 ```
 
-Close the Arduino Serial Monitor first, because only one program can use the port at a time.
+Close the Arduino Serial Monitor first, because only one program can use the port at a time. Restarting `arm.py` doesn't move the arm: it asks the Uno where the arm is and carries on from there.
 
 ## Controller map
 
@@ -81,9 +81,9 @@ If the shoulder sags or buzzes partway through the flip, it can't hold the arm s
 
 ## First power-on checklist
 
-1. Upload the firmware with the 5 V supply **unplugged**. In Serial Monitor at 115200 baud you should see `READY` and a `LIMITS …` line.
+1. Upload the firmware with the 5 V supply **unplugged**. In Serial Monitor at 115200 baud you should see `READY`, a `LIMITS …` line and a `POSE …` line. Typing `?` prints the last two again.
 2. Type `hello` and press Enter, then `P 90 90`. Nothing should happen, which shows that bad commands are ignored.
-3. Plug in the 5 V supply, then press the Uno's reset button. The arm should ease to its home pose, not slam.
+3. With the 5 V supply still unplugged, **move the arm by hand to roughly its home pose** (every joint near the middle of its travel). Then plug in the 5 V supply. The servos have no way to know where they are, so on power-up every joint jumps straight to home at full speed. Starting near home keeps that jump small. Do this every time you power up.
 4. Close Serial Monitor and run `python arm.py`. Move each joint to its ends, and tighten `lo`/`hi` wherever a joint hits something.
 5. Pull the USB cable while the arm is moving. It should freeze within half a second.
 6. Tune the flip (above) and test it with the real object.
