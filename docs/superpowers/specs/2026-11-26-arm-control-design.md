@@ -105,6 +105,8 @@ Xbox controller --USB--> Laptop (arm.py) --USB serial--> Uno (arm.ino) --I2C--> 
 - **Uno → laptop:** on boot it prints `READY` and then
   `LIMITS min0 max0 home0 ... min5 max5 home5`. The laptop reads the limits from this
   line, so the limits are defined in one place only.
+  `POSE a0..a5` (where the servos are now) follows. The laptop can send `?` at any time
+  to get `LIMITS` and `POSE` again.
 - Every target is clamped to `[min, max]`. Each loop, every servo moves toward its
   target at no more than a set speed (`MAX_DEG_PER_S`, one constant, starting around
   90°/s). This keeps the motion smooth even when the laptop jumps a target.
@@ -117,8 +119,9 @@ One script, run as `python arm.py [--port COM5] [--dry-run]`.
 - With no `--port`, it auto-picks the first Arduino-looking serial port.
 - `--dry-run` skips the serial link and prints the poses it would send instead, for
   testing without the arm.
-- After opening the port, it waits for `READY` (opening the port resets the Uno), then
-  parses `LIMITS`.
+- It opens the port with DTR off so the Uno is *not* reset, then sends `?` every 0.5 s
+  (for up to 5 s) until it has `LIMITS` and `POSE`. Teleop starts from that `POSE`, so
+  connecting never moves the arm.
 - Main loop at 50 Hz: work out the commanded pose, clamp it to the limits, and send
   a `P` line. Clamping on the laptop side means holding a stick past a limit doesn't
   "wind up".
