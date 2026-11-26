@@ -14,7 +14,7 @@ still upright.
 
 - 6× MG996R servos, direct drive, no gear reduction. They give no position feedback.
 - Arduino Uno as the controller.
-- Joint order, base upward:
+- Joint order, base upward (wiring diagram: [`docs/wiring.html`](../../wiring.html)):
 
 | # | Joint       | Motion                                   |
 |---|-------------|------------------------------------------|

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arm Wiring</title>
+<style>
+  :root {
+    --w-fg: #18181b; --w-bg: #fafafa; --w-muted: #63636e; --w-line: #a1a1aa;
+    --w-card: #ffffff; --w-warn: #b45309; --w-warn-bg: #fef3c7; --w-radius: 10px;
+    --red: #dc2626; --brown: #8b5a2b; --orange: #f59e0b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --w-fg: #e4e4e7; --w-bg: #18181b; --w-muted: #a1a1aa; --w-line: #71717a;
+      --w-card: #232327; --w-warn: #fbbf24; --w-warn-bg: #3a2a0a;
+      --red: #f87171; --brown: #c08a5a; --orange: #fbbf24;
+    }
+  }
+  :root[data-theme="dark"] {
+    --w-fg: #e4e4e7; --w-bg: #18181b; --w-muted: #a1a1aa; --w-line: #71717a;
+    --w-card: #232327; --w-warn: #fbbf24; --w-warn-bg: #3a2a0a;
+    --red: #f87171; --brown: #c08a5a; --orange: #fbbf24;
+  }
+  /* Inside T3 the host theme variables win; standalone, our own tokens apply. */
+  :root {
+    --fg: var(--foreground, var(--w-fg)); --mut: var(--muted-foreground, var(--w-muted));
+    --ln: var(--border, var(--w-line)); --cd: var(--card, var(--w-card));
+    --r: var(--radius, var(--w-radius));
+  }
+  body {
+    margin: 0; padding: 16px; color: var(--fg);
+    background: var(--background, var(--w-bg));
+    font: 15px/1.5 var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.sub { color: var(--mut); margin: 0 0 16px; }
+  .diagram { overflow-x: auto; border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); padding: 8px; }
+  .diagram svg { display: block; width: 100%; min-width: 640px; height: auto; }
+  svg text { fill: var(--fg); font-family: inherit; }
+  svg .muted { fill: var(--mut); }
+  svg .box { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+  svg .rail { stroke-width: 4; }
+  svg .wire { stroke-width: 2.5; fill: none; }
+  svg .dot { stroke: none; }
+  .warn { border-left: 4px solid var(--w-warn); background: var(--w-warn-bg); padding: 12px 16px; border-radius: 0 var(--r) var(--r) 0; margin: 16px 0; }
+  .warn strong { color: var(--w-warn); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--ln); }
+  th { color: var(--mut); font-weight: 600; font-size: 13px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+  ol li, ul li { margin: 4px 0; }
+  code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Robot arm wiring</h1>
+  <p class="sub">6× MG996R servos · Arduino Uno · separate servo power supply</p>
+
+  <div class="warn"><strong>Never power the servos from the Uno's 5V pin.</strong>
+    Six MG996Rs can pull over 10&nbsp;A together. The Uno gets its power from the laptop's USB cable and only sends the signal wires.</div>
+
+  <div class="diagram">
+  <svg viewBox="0 0 920 490" role="img" aria-label="Wiring diagram: power supply feeds a +6V rail and a ground rail; each servo's red wire goes to +6V, brown to ground, orange signal to an Uno pin; Uno GND joins the ground rail; laptop USB powers the Uno.">
+    <!-- Power supply -->
+    <rect class="box" x="20" y="125" width="150" height="110" rx="8"/>
+    <text x="95" y="160" text-anchor="middle" font-weight="600">Servo power</text>
+    <text x="95" y="180" text-anchor="middle" class="muted" font-size="13">5–6 V, ≥ 10 A</text>
+    <text x="158" y="174" text-anchor="end" font-weight="700" style="fill:var(--red)">+</text>
+    <text x="158" y="214" text-anchor="end" font-weight="700">−</text>
+
+    <!-- Rails -->
+    <line class="rail" x1="170" y1="170" x2="895" y2="170" style="stroke:var(--red)"/>
+    <line class="rail" x1="170" y1="210" x2="895" y2="210" style="stroke:var(--fg)"/>
+    <text x="176" y="160" font-size="12" style="fill:var(--red)">+6 V rail</text>
+    <text x="176" y="228" font-size="12" class="muted">GND rail</text>
+
+    <!-- Capacitor between rails -->
+    <line class="wire" x1="230" y1="170" x2="230" y2="185" style="stroke:var(--fg)"/>
+    <line x1="218" y1="185" x2="242" y2="185" stroke-width="3" style="stroke:var(--fg)"/>
+    <path d="M218 196 Q230 190 242 196" stroke-width="3" fill="none" style="stroke:var(--fg)"/>
+    <line class="wire" x1="230" y1="194" x2="230" y2="210" style="stroke:var(--fg)"/>
+    <circle class="dot" cx="230" cy="170" r="4" style="fill:var(--red)"/>
+    <circle class="dot" cx="230" cy="210" r="4" style="fill:var(--fg)"/>
+    <text x="248" y="194" font-size="12" class="muted">1000 µF</text>
+
+    <!-- Servos: cx = 340, 450, 560, 670, 780, 870 -->
+    <g id="servos" font-size="12"></g>
+
+    <!-- Uno -->
+    <rect class="box" x="240" y="330" width="660" height="120" rx="8"/>
+    <text x="570" y="410" text-anchor="middle" font-weight="600" font-size="16">Arduino Uno</text>
+    <text x="570" y="430" text-anchor="middle" class="muted" font-size="12">signal pins only, no servo power</text>
+    <text x="265" y="350" text-anchor="middle" font-size="12" font-weight="600">GND</text>
+    <line class="wire" x1="265" y1="330" x2="265" y2="210" style="stroke:var(--fg)"/>
+    <circle class="dot" cx="265" cy="210" r="4" style="fill:var(--fg)"/>
+    <circle class="dot" cx="265" cy="330" r="4" style="fill:var(--fg)"/>
+
+    <!-- Laptop -->
+    <rect class="box" x="20" y="355" width="150" height="70" rx="8"/>
+    <text x="95" y="388" text-anchor="middle" font-weight="600">Laptop</text>
+    <text x="95" y="406" text-anchor="middle" class="muted" font-size="12">+ Xbox controller</text>
+    <line class="wire" x1="170" y1="390" x2="240" y2="390" stroke-dasharray="6 4" style="stroke:var(--mut)"/>
+    <text x="205" y="380" text-anchor="middle" class="muted" font-size="11">USB</text>
+  </svg>
+  </div>
+
+  <p class="sub" style="margin-top:8px">A dot means the wires connect. Wires that cross without a dot don't touch.</p>
+
+  <h2>Servo connections</h2>
+  <p>Each MG996R has three wires: <span class="sw" style="background:var(--brown)"></span>brown = ground, <span class="sw" style="background:var(--red)"></span>red = power, <span class="sw" style="background:var(--orange)"></span>orange = signal.</p>
+  <table>
+    <thead><tr><th>#</th><th>Joint</th><th>Orange → Uno pin</th><th>Red →</th><th>Brown →</th></tr></thead>
+    <tbody id="pins"></tbody>
+  </table>
+
+  <h2>Wiring steps</h2>
+  <ol>
+    <li>Build the two rails (a terminal block or a strip of perfboard works). Use thick wire, around <strong>18 AWG</strong>, from the supply to the rails.</li>
+    <li>Connect the supply's <strong>+</strong> to the +6 V rail and its <strong>−</strong> to the GND rail.</li>
+    <li>Solder the <strong>1000 µF capacitor</strong> across the rails. Its stripe (−) leg goes to GND. Use one rated for 16 V or higher.</li>
+    <li>Plug in each servo: red to +6 V, brown to GND, orange to its Uno pin from the table.</li>
+    <li>Run one wire from any <strong>Uno GND</strong> pin to the GND rail. Without this shared ground the servos twitch at random.</li>
+    <li>Connect the Uno to the laptop over USB. Turn on the servo supply last.</li>
+  </ol>
+
+  <h2>Before the first power-on</h2>
+  <ul>
+    <li>Upload the firmware <em>before</em> turning on the servo supply, so the arm goes to its home pose rather than wherever old code sends it.</li>
+    <li>Check with a meter that the rails aren't shorted together.</li>
+    <li>Keep a hand near the supply's switch the first time. If anything grinds or buzzes hard, cut power and tighten that joint's limits.</li>
+  </ul>
+</main>
+<script>
+  const joints = ["Base", "Shoulder", "Elbow", "Wrist", "Claw rotate", "Claw grip"];
+  const pins = [3, 5, 6, 9, 10, 11];
+  const xs = [340, 450, 560, 670, 780, 870];
+  const ns = "http://www.w3.org/2000/svg";
+  const g = document.getElementById("servos");
+  const el = (tag, attrs, text) => {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text) e.textContent = text;
+    g.appendChild(e);
+  };
+  joints.forEach((name, i) => {
+    const cx = xs[i];
+    el("rect", { class: "box", x: cx - 42, y: 30, width: 84, height: 56, rx: 6 });
+    el("text", { x: cx, y: 54, "text-anchor": "middle", "font-weight": 600 }, name);
+    el("text", { x: cx, y: 72, "text-anchor": "middle", class: "muted", "font-size": 11 }, "servo " + i);
+    // brown → GND rail, red → +rail, orange → Uno pin
+    el("line", { class: "wire", x1: cx - 14, y1: 86, x2: cx - 14, y2: 210, style: "stroke:var(--brown)" });
+    el("circle", { class: "dot", cx: cx - 14, cy: 210, r: 4, style: "fill:var(--brown)" });
+    el("line", { class: "wire", x1: cx, y1: 86, x2: cx, y2: 170, style: "stroke:var(--red)" });
+    el("circle", { class: "dot", cx: cx, cy: 170, r: 4, style: "fill:var(--red)" });
+    el("line", { class: "wire", x1: cx + 14, y1: 86, x2: cx + 14, y2: 330, style: "stroke:var(--orange)" });
+    el("circle", { class: "dot", cx: cx + 14, cy: 330, r: 4, style: "fill:var(--orange)" });
+    el("text", { x: cx + 14, y: 350, "text-anchor": "middle", "font-weight": 600 }, "D" + pins[i]);
+  });
+  document.getElementById("pins").innerHTML = joints.map((n, i) =>
+    `<tr><td>${i}</td><td>${n}</td><td><code>D${pins[i]}</code></td><td>+6 V rail</td><td>GND rail</td></tr>`).join("");
+</script>
+</body>
+</html>
