@@ -13,7 +13,11 @@ still upright.
 ## Hardware (as given)
 
 - 6× MG996R servos, direct drive, no gear reduction. They give no position feedback.
-- Arduino Uno as the controller.
+- Arduino Uno R3 as the controller.
+- Adafruit 16-channel PWM servo driver (PCA9685). It talks to the Uno over I2C, and
+  the servos plug into it on channels 0–5.
+- 5 V 10 A switching power supply with a barrel plug, a female barrel-jack-to-screw-terminal
+  adapter, a 1000 µF 16 V electrolytic capacitor, and servo extension cables.
 - Joint order, base upward (wiring diagram: [`docs/wiring.html`](../../wiring.html)):
 
 | # | Joint       | Motion                                   |
@@ -27,9 +31,16 @@ still upright.
 
 The arm can bend past vertical, so it can reach behind itself.
 
-**Power (required):** the servos run from a separate 5–6 V supply rated for at least
-10 A. Its ground is tied to the Uno's GND. Put a ~1000 µF capacitor across the servo
-rail. Never power the servos from the Uno's 5 V pin.
+**Power (required):** the 5 V 10 A supply feeds the driver board's blue V+/GND screw
+terminal through the barrel adapter, using 18–20 AWG wire (jumper wires are too thin).
+The 1000 µF capacitor goes across that terminal, stripe leg to GND. The Uno's 5 V and
+GND pins feed only the driver's logic (`VCC`/`GND`), and that also gives the two boards
+a shared ground. Never power the servos from the Uno's 5 V pin.
+
+**Torque risk:** an MG996R at 5 V gives roughly 9 kg·cm. With direct drive, the shoulder
+holds the whole arm, and the arm is stretched out partway through the flip. If the
+shoulder sags or buzzes there, shorten or lighten the arm, or tune the flip to keep
+the elbow folded while it passes over the top.
 
 ## Goals
 
@@ -70,7 +81,7 @@ rail. Never power the servos from the Uno's 5 V pin.
 ### Split of responsibilities
 
 ```
-Xbox controller --USB--> Laptop (arm.py) --USB serial--> Uno (arm.ino) --PWM--> 6 servos
+Xbox controller --USB--> Laptop (arm.py) --USB serial--> Uno (arm.ino) --I2C--> PCA9685 --> 6 servos
                           - teleop                        - clamp to joint limits
                           - record / replay               - smooth motion (max deg/s)
                           - programs (flip, home)         - watchdog: freeze if silent
@@ -78,11 +89,17 @@ Xbox controller --USB--> Laptop (arm.py) --USB serial--> Uno (arm.ino) --PWM--> 
 
 ### Uno firmware (`firmware/arm/arm.ino`)
 
-- Uses the standard `Servo` library. Servos on pins **3, 5, 6, 9, 10, 11**, in joint order.
-- Per-joint calibration table at the top of the file: `min`, `max`, `home` (degrees).
-  These are the calibration knobs. The arm will need them tuned.
-- **Power-on:** each servo is set to its `home` value *before* `attach()`, so the
-  first pulse it sees is the home pose.
+- Uses the **Adafruit PWM Servo Driver Library** (Arduino Library Manager). The driver
+  is at I2C address 0x40, wired to the Uno's SDA/SCL pins (A4/A5). Servos go on
+  channels **0–5**, in joint order. PWM is 50 Hz.
+- Per-joint calibration table at the top of the file: `min`, `max`, `home` (degrees),
+  plus `pulseMin`/`pulseMax` (µs, starting at 500/2500), which map 0–180° to that
+  servo's real travel. These are the calibration knobs. The arm will need them tuned.
+- `OSC_HZ` constant for the PCA9685's oscillator (starting at 27 MHz). These chips run
+  a few percent off nominal, which shifts every angle. Tune it once if all the joints
+  read off by the same amount.
+- **Power-on:** the PCA9685 sends no pulses until it's told to, so the servos stay
+  limp. `setup()` sends the `home` pose first, so the first thing the arm does is go home.
 - **Protocol (laptop → Uno),** 115200 baud, one line per update:
   `P a0 a1 a2 a3 a4 a5\n`, integer degrees. A malformed line is ignored.
 - **Uno → laptop:** on boot it prints `READY` and then
@@ -195,7 +212,7 @@ README.md                    # wiring, power, setup, controller map, tuning step
   the flip needs a full half-turn.
 - Known risk: MG996R units often travel less than a true 180°. If claw rotate falls
   short, the wrist tilt makes up the difference in `flip.json`. The servo pulse range
-  (`attach(pin, 500, 2500)`) is a per-joint calibration value, so travel can be
+  (`pulseMin`/`pulseMax`) is a per-joint calibration value, so travel can be
   widened without changing code.
 - A per-joint `invert` flag on the laptop side, so a stick pushed up moves the joint
   the way you'd expect regardless of how the servo is mounted.
