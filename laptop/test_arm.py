@@ -55,6 +55,37 @@ def test_recorder():
     assert r.frames[0]["pose"][0] == 90
 
 
+def test_files():
+    import json, tempfile
+    from datetime import datetime
+    from pathlib import Path
+
+    d = Path(tempfile.mkdtemp())
+    assert latest_recording(d / "nope") is None
+    assert save_recording([{"t": 0, "pose": [90] * 6}], d) is None  # too short
+    frames = [{"t": 0, "pose": [90] * 6}, {"t": 1, "pose": [100] * 6}]
+    p1 = save_recording(frames, d, datetime(2026, 11, 26, 9, 0, 0))
+    p2 = save_recording(frames, d, datetime(2026, 11, 26, 9, 0, 5))
+    assert p1.name == "rec-20261126-090000.json" and latest_recording(d) == p2
+    assert load_program(p2) == frames
+    for bad in [{"frames": []}, {"name": "x"}, {"frames": [{"t": 0, "pose": [1, 2]}]}]:
+        f = d / "bad.json"
+        f.write_text(json.dumps(bad))
+        try:
+            load_program(f)
+            assert False, bad
+        except ValueError as e:
+            assert "bad.json" in str(e)
+
+
+def test_flip_file_is_valid():
+    from pathlib import Path
+
+    frames = load_program(Path(__file__).parent / "programs" / "flip.json")
+    assert len(frames) >= 6 and frames[0]["t"] == 0
+    assert all(a["t"] < b["t"] for a, b in zip(frames, frames[1:]))
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

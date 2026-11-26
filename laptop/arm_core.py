@@ -1,4 +1,7 @@
 """Hardware-free arm logic: limits, teleop, keyframe playback, recording."""
+import json
+from datetime import datetime
+from pathlib import Path
 
 Limits = list[tuple[int, int, int]]  # six (min, max, home)
 
@@ -81,3 +84,34 @@ class Recorder:
         # ponytail: 1e-9 slack so float sums like 0.1-0.05 don't drop a sample
         if not self.frames or rel - self.frames[-1]["t"] >= self.interval - 1e-9:
             self.frames.append({"t": rel, "pose": list(pose)})
+
+
+def load_program(path: Path) -> list[dict]:
+    path = Path(path)
+    try:
+        frames = json.loads(path.read_text())["frames"]
+        ok = bool(frames) and all(
+            len(f["pose"]) == 6 and all(isinstance(a, (int, float)) for a in f["pose"])
+            and isinstance(f["t"], (int, float))
+            for f in frames
+        )
+    except (KeyError, TypeError, json.JSONDecodeError) as e:
+        raise ValueError(f"{path.name}: {e}") from None
+    if not ok:
+        raise ValueError(f"{path.name}: needs a non-empty 'frames' list of {{t, pose[6]}}")
+    return frames
+
+
+def save_recording(frames: list[dict], folder: Path, now: datetime | None = None) -> Path | None:
+    if len(frames) < 2:
+        return None
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"rec-{(now or datetime.now()):%Y%m%d-%H%M%S}.json"
+    path.write_text(json.dumps({"name": path.stem, "frames": frames}))
+    return path
+
+
+def latest_recording(folder: Path) -> Path | None:
+    recs = sorted(Path(folder).glob("rec-*.json"))
+    return recs[-1] if recs else None
