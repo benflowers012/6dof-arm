@@ -6,6 +6,8 @@ A 6-servo desktop robot arm for a class project. Drive it live with an Xbox cont
 
 The laptop does the thinking (`laptop/arm.py`). The Arduino Uno (`firmware/arm/arm.ino`) keeps every joint inside its safe range, moves the servos smoothly, and freezes the arm if the laptop stops talking.
 
+**Docs:** open [`docs/index.html`](docs/index.html) in a browser for the home page, with links to controls, the user guide, wiring, tuning and troubleshooting.
+
 ## Parts
 
 - Arduino Uno R3 and a USB A–B cable
@@ -35,7 +37,10 @@ cd laptop
 python arm.py               # auto-finds the Uno
 python arm.py --port COM5   # if it picks the wrong port
 python arm.py --dry-run     # no arm needed: prints the angles it would send
+python arm.py --no-browser  # don't open the dashboard tab
 ```
+
+`arm.py` opens a live **debug dashboard** at http://127.0.0.1:8765/. It shows joint angles and limits, the controller's sticks and buttons, the current mode and progress, and a log. It stops when `arm.py` stops, and reconnects when you run it again.
 
 Close the Arduino Serial Monitor first, because only one program can use the port at a time. Restarting `arm.py` doesn't move the arm: it asks the Uno where the arm is and carries on from there.
 

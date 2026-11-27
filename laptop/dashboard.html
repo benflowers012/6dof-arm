@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arm Dashboard</title>
+<style>
+  :root {
+    --fg: #18181b; --bg: #f4f4f5; --mut: #63636e; --ln: #d4d4d8; --cd: #ffffff;
+    --acc: #7c3aed; --ok: #16a34a; --bad: #dc2626; --rec: #dc2626; --play: #2563eb; --range: #ede9fe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fg: #e4e4e7; --bg: #121214; --mut: #a1a1aa; --ln: #3f3f46; --cd: #1f1f23;
+      --acc: #a78bfa; --ok: #4ade80; --bad: #f87171; --rec: #f87171; --play: #60a5fa; --range: #2e2650;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fg: #e4e4e7; --bg: #121214; --mut: #a1a1aa; --ln: #3f3f46; --cd: #1f1f23;
+    --acc: #a78bfa; --ok: #4ade80; --bad: #f87171; --rec: #f87171; --play: #60a5fa; --range: #2e2650;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 14px/1.45 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 14px;
+         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mut); margin: 0 0 10px; }
+  .card { background: var(--cd); border: 1px solid var(--ln); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .wide { grid-column: 1 / -1; }
+  .pill { font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 999px; color: #fff; background: var(--ok); }
+  .pill.off { background: var(--bad); }
+  .meta { color: var(--mut); font-variant-numeric: tabular-nums; }
+  .meta b { color: var(--fg); font-weight: 600; }
+  .mode { font-size: 22px; font-weight: 800; letter-spacing: .02em; }
+  .mode.playing { color: var(--play); } .mode.recording { color: var(--rec); }
+  .progress { height: 8px; background: var(--ln); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--play); width: 0; }
+  .joint { display: grid; grid-template-columns: 92px 52px 1fr; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--ln); }
+  .joint:last-child { border-bottom: 0; }
+  .jname { font-weight: 600; }
+  .angle { font: 700 18px ui-monospace, monospace; text-align: right; font-variant-numeric: tabular-nums; }
+  .track { position: relative; height: 22px; background: var(--bg); border: 1px solid var(--ln); border-radius: 5px; }
+  .track .range { position: absolute; top: 0; bottom: 0; background: var(--range); }
+  .track .home { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--mut); opacity: .7; }
+  .track .pos { position: absolute; top: 2px; bottom: 2px; width: 6px; margin-left: -3px; border-radius: 3px; background: var(--acc); }
+  .track .lim { position: absolute; top: 3px; font-size: 10px; color: var(--mut); }
+  .speed { height: 4px; margin-top: 3px; position: relative; }
+  .speed > div { position: absolute; top: 0; height: 4px; background: var(--acc); border-radius: 2px; }
+  .axes { display: grid; grid-template-columns: 34px 1fr 46px; gap: 6px 8px; align-items: center; font-variant-numeric: tabular-nums; }
+  .axbar { height: 10px; background: var(--bg); border: 1px solid var(--ln); border-radius: 5px; position: relative; overflow: hidden; }
+  .axbar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--ln); }
+  .axbar > div { position: absolute; top: 0; bottom: 0; background: var(--acc); }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .btn { font: 700 12px ui-monospace, monospace; padding: 4px 9px; border: 1px solid var(--ln); border-radius: 6px; color: var(--mut); }
+  .btn.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+  pre { font: 13px ui-monospace, monospace; margin: 0; white-space: pre-wrap; }
+  #log { height: 220px; overflow-y: auto; background: var(--bg); border: 1px solid var(--ln); border-radius: 6px; padding: 8px 10px; }
+  .stopped { grid-column: 1 / -1; display: none; padding: 12px 16px; border-radius: 10px; background: var(--bad); color: #fff; font-weight: 600; }
+  body.off .stopped { display: block; }
+  body.off .card { opacity: .55; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Arm dashboard</h1>
+    <span class="pill" id="pill">LIVE</span>
+    <span class="meta">port <b id="port">–</b></span>
+    <span class="meta">controller <b id="ctrl">–</b></span>
+    <span class="meta">loop <b id="hz">–</b> Hz</span>
+    <span class="meta">up <b id="up">–</b></span>
+  </header>
+  <div class="stopped">arm.py has stopped. Run it again and this page reconnects on its own, or close the tab.</div>
+
+  <section class="card">
+    <h2>Mode</h2>
+    <div class="mode" id="mode">–</div>
+    <div class="meta" id="modeinfo">&nbsp;</div>
+    <div class="progress" id="progwrap" hidden><div id="prog"></div></div>
+    <h2 style="margin-top:16px">Last command sent to the Uno</h2>
+    <pre id="sent">–</pre>
+  </section>
+
+  <section class="card">
+    <h2>Controller</h2>
+    <div class="axes" id="axes"></div>
+    <div class="btns" id="btns"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>Joints (° commanded · shaded = allowed range · line = home · thin bar = stick speed)</h2>
+    <div id="joints"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>Log</h2>
+    <pre id="log"></pre>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const pct = a => (Math.max(0, Math.min(180, a)) / 180 * 100) + "%";
+let built = false, lastLog = "";
+
+function build(s) {
+  $("joints").innerHTML = s.joints.map((j, i) => `
+    <div class="joint">
+      <div class="jname">${j.name}</div>
+      <div class="angle" id="ang${i}">–</div>
+      <div>
+        <div class="track">
+          <div class="range" style="left:${pct(j.min)};width:calc(${pct(j.max)} - ${pct(j.min)})"></div>
+          <div class="home" style="left:${pct(j.home)}"></div>
+          <span class="lim" style="left:calc(${pct(j.min)} + 3px)">${j.min}</span>
+          <span class="lim" style="right:calc(100% - ${pct(j.max)} + 3px)">${j.max}</span>
+          <div class="pos" id="pos${i}"></div>
+        </div>
+        <div class="speed"><div id="spd${i}"></div></div>
+      </div>
+    </div>`).join("");
+  $("axes").innerHTML = s.axes.map((a, i) => `
+    <b>${a.name}</b><div class="axbar"><div id="ax${i}"></div></div><span id="axv${i}"></span>`).join("");
+  $("btns").innerHTML = s.buttons.map(b => `<span class="btn" id="b-${b.name}">${b.name}</span>`).join("");
+  built = true;
+}
+
+function bar(el, v) {  // v in [-1, 1], drawn from the centre
+  const w = Math.min(1, Math.abs(v)) * 50;
+  el.style.left = (v < 0 ? 50 - w : 50) + "%";
+  el.style.width = w + "%";
+}
+
+function render(s) {
+  if (!built) build(s);
+  document.body.classList.remove("off");
+  $("pill").textContent = "LIVE"; $("pill").classList.remove("off");
+  $("port").textContent = s.port; $("ctrl").textContent = s.controller;
+  $("hz").textContent = s.hz; $("up").textContent = s.uptime;
+  const m = $("mode");
+  m.textContent = s.mode.toUpperCase(); m.className = "mode " + s.mode;
+  let info = s.mode === "playing" ? `${s.program} · ${s.progress[0].toFixed(1)} / ${s.progress[1].toFixed(1)} s` : "driving with the controller";
+  if (s.recording !== null) info += ` · ● recording, ${s.recording} frames`;
+  $("modeinfo").textContent = info;
+  $("progwrap").hidden = s.mode !== "playing";
+  if (s.mode === "playing") $("prog").style.width = (s.progress[0] / s.progress[1] * 100) + "%";
+  $("sent").textContent = s.sent;
+  s.joints.forEach((j, i) => {
+    $("ang" + i).textContent = Math.round(j.angle);
+    $("pos" + i).style.left = pct(j.angle);
+    const sp = $("spd" + i), w = Math.min(1, Math.abs(j.speed)) * 50;
+    sp.style.left = (j.speed < 0 ? 50 - w : 50) + "%"; sp.style.width = w + "%";
+  });
+  s.axes.forEach((a, i) => {
+    const el = $("ax" + i);
+    if (a.name === "LT" || a.name === "RT") { el.style.left = "0"; el.style.width = Math.min(1, a.value) * 100 + "%"; }
+    else bar(el, a.value);  // sticks: -1..1 from the centre
+    $("axv" + i).textContent = a.value.toFixed(2);
+  });
+  s.buttons.forEach(b => $("b-" + b.name).classList.toggle("on", b.pressed));
+  const log = s.log.join("\n");
+  if (log !== lastLog) {
+    const el = $("log"), atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+    el.textContent = log; lastLog = log;
+    if (atBottom) el.scrollTop = el.scrollHeight;
+  }
+}
+
+async function poll() {
+  try {
+    const r = await fetch("/state", { cache: "no-store" });
+    render(await r.json());
+    setTimeout(poll, 100);
+  } catch {
+    document.body.classList.add("off");
+    built = false;  // limits may differ after a re-run, so rebuild the rows
+    $("pill").textContent = "STOPPED"; $("pill").classList.add("off");
+    setTimeout(poll, 1000);  // keep trying so a re-run of arm.py reconnects
+  }
+}
+poll();
+</script>
+</body>
+</html>

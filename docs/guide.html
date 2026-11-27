@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arm User Guide</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .toc { columns: 2 220px; margin: 0 0 8px; padding-left: 20px; }
+  td:first-child { white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← Home</a>
+  <h1>User guide</h1>
+  <p class="sub">Set up, run, tune and fix the arm.</p>
+
+  <ol class="toc">
+    <li><a href="#parts">Parts</a></li>
+    <li><a href="#setup">One-time setup</a></li>
+    <li><a href="#power-on">First power-on</a></li>
+    <li><a href="#running">Running it</a></li>
+    <li><a href="#dashboard">Debug dashboard</a></li>
+    <li><a href="#tuning">Tuning</a></li>
+    <li><a href="#flip">Tuning the flip</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#servo">Servo specs</a></li>
+  </ol>
+
+  <h2 id="parts">Parts</h2>
+  <ul>
+    <li>Arduino Uno R3 and a USB A–B cable</li>
+    <li>Adafruit 16-channel PWM servo driver (PCA9685)</li>
+    <li>6× MG996R servos and servo extension cables</li>
+    <li>5 V 10 A power supply, plus a female barrel-jack adapter to the driver's blue terminal</li>
+    <li>1000 µF 16 V capacitor</li>
+    <li>4 male-to-female jumper wires</li>
+    <li>Xbox controller and its USB cable, plus a laptop with Python 3</li>
+  </ul>
+  <p>How it all connects: <a href="wiring.html">Wiring</a>.</p>
+
+  <h2 id="setup">One-time setup</h2>
+  <h3>Arduino</h3>
+  <ol>
+    <li>Install the <strong>Arduino IDE</strong>.</li>
+    <li>Open Library Manager and install <strong>Adafruit PWM Servo Driver Library</strong>.</li>
+    <li>Open <code>firmware/arm/arm.ino</code>, choose board <strong>Arduino Uno</strong> and its port, and click Upload. Keep the 5 V servo supply <strong>unplugged</strong> while you upload.</li>
+  </ol>
+  <h3>Laptop</h3>
+<pre>cd laptop
+python -m pip install -r requirements.txt
+python test_arm.py        # should print: all checks passed</pre>
+
+  <h2 id="power-on">First power-on</h2>
+  <div class="warn"><strong>The servos don't know where they are.</strong> On power-up every joint jumps straight to home at full speed. So every time, move the arm by hand to roughly home first, with every joint near the middle of its travel.</div>
+  <ol>
+    <li>Upload the firmware with the 5 V supply unplugged. In Serial Monitor at 115200 baud you should see <code>READY</code>, a <code>LIMITS …</code> line and a <code>POSE …</code> line.</li>
+    <li>Type <code>hello</code> and press Enter, then <code>P 90 90</code>. Nothing should happen, which shows that bad commands are ignored.</li>
+    <li>Move the arm by hand to roughly home, then plug in the 5 V supply.</li>
+    <li>Close Serial Monitor and run <code>python arm.py</code>. Move each joint to its ends, and tighten the limits wherever a joint hits something (see <a href="#tuning">Tuning</a>).</li>
+    <li>Pull the USB cable while the arm is moving. It should freeze within half a second.</li>
+    <li><a href="#flip">Tune the flip</a> and test it with the real object.</li>
+  </ol>
+
+  <h2 id="running">Running it</h2>
+<pre>cd laptop
+python arm.py               # auto-finds the Uno, opens the dashboard
+python arm.py --port COM5   # if it picks the wrong port
+python arm.py --dry-run     # no arm needed: prints the angles it would send
+python arm.py --no-browser  # don't open the dashboard tab</pre>
+  <ul>
+    <li>Close the Arduino Serial Monitor first, because only one program can use the port at a time.</li>
+    <li>Restarting <code>arm.py</code> doesn't move the arm: it asks the Uno where the arm is and carries on from there.</li>
+    <li>Press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the terminal to quit. The arm holds still.</li>
+    <li>Button layout: <a href="controls.html">Controls</a>.</li>
+  </ul>
+
+  <h2 id="dashboard">Debug dashboard</h2>
+  <p>When <code>arm.py</code> starts, it opens <code>http://127.0.0.1:8765/</code> in your browser. The page updates 10 times a second and shows:</p>
+  <ul>
+    <li><strong>Mode:</strong> driving, playing (with a progress bar), or recording (with a frame count), plus the exact command just sent to the Uno.</li>
+    <li><strong>Controller:</strong> every stick and trigger value and which buttons are held. Use this to check the button mapping.</li>
+    <li><strong>Joints:</strong> each joint's angle on a 0–180° bar. The shaded part is its allowed range, the line is home, and the thin bar under it is the stick speed.</li>
+    <li><strong>Log:</strong> everything the terminal prints, like saved recordings, stops and errors.</li>
+  </ul>
+  <p>It only runs on your laptop, so nobody else on the network can see it. When <code>arm.py</code> stops, the page shows <strong>STOPPED</strong>. Run <code>arm.py</code> again and the page reconnects on its own.</p>
+
+  <h2 id="tuning">Tuning</h2>
+  <table>
+    <thead><tr><th>What's wrong</th><th>Where to fix it</th></tr></thead>
+    <tbody>
+      <tr><td>A joint hits something, or should stop sooner</td><td><code>lo</code> / <code>hi</code> in the <code>J[]</code> table at the top of <code>arm.ino</code>, then re-upload</td></tr>
+      <tr><td>Home pose is wrong</td><td><code>home</code> in the same table</td></tr>
+      <tr><td>A servo can't reach the ends of its travel</td><td><code>pulseMin</code> / <code>pulseMax</code> for that joint (try 600/2400, or 450/2550)</td></tr>
+      <tr><td>Every joint is off by about the same amount</td><td><code>OSC_HZ</code> in <code>arm.ino</code> (try 26–28 million)</td></tr>
+      <tr><td>A stick moves a joint the wrong way</td><td><code>INVERT</code> at the top of <code>laptop/arm.py</code></td></tr>
+      <tr><td>A button or stick does the wrong thing</td><td><code>AXIS_*</code> / <code>BTN_*</code> at the top of <code>laptop/arm.py</code>. Check the dashboard to see which number lights up</td></tr>
+      <tr><td>The arm moves too fast or too slow overall</td><td><code>MAX_DEG_PER_S</code> in <code>arm.ino</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="flip">Tuning the flip</h2>
+  <p>The angles in <code>laptop/programs/flip.json</code> are placeholders. To set them:</p>
+  <ol>
+    <li>Run <code>python arm.py</code>.</li>
+    <li>Drive the arm to each position of the flip:
+      <ol>
+        <li>open, over the object</li>
+        <li>closed on it</li>
+        <li>lifted</li>
+        <li>swinging over the top with the claw twisted</li>
+        <li>lowered behind</li>
+        <li>released</li>
+      </ol>
+    </li>
+    <li>At each position, press <kbd>View</kbd> and copy the printed angles from the terminal or the dashboard log into that step's <code>"pose"</code>.</li>
+    <li>Adjust the <code>"t"</code> times, in seconds from the start. They must keep increasing, or the file is rejected.</li>
+    <li>Press <kbd>A</kbd> to try it. There's no need to restart, because the file is re-read on every press.</li>
+  </ol>
+  <p>If the shoulder sags or buzzes partway through, it can't hold the arm stretched out. Keep the elbow bent as the arm passes over the top.</p>
+
+  <h2 id="trouble">Troubleshooting</h2>
+  <table>
+    <thead><tr><th>You see</th><th>Try</th></tr></thead>
+    <tbody>
+      <tr><td><code>No controller found.</code></td><td>Plug the controller in by USB before starting <code>arm.py</code>.</td></tr>
+      <tr><td><code>No serial port found.</code></td><td>Plug in the Uno's USB cable.</td></tr>
+      <tr><td><code>Uno didn't answer with LIMITS/POSE</code></td><td>Upload <code>arm.ino</code>, close Serial Monitor, or pass the right <code>--port</code>. Check Device Manager → Ports.</td></tr>
+      <tr><td><code>Lost the USB connection</code></td><td>The cable came out. The arm freezes; plug it back in and re-run.</td></tr>
+      <tr><td>Servos twitch or jitter</td><td>Check the Uno GND → driver GND jumper. Without a shared ground the signal is noisy.</td></tr>
+      <tr><td>The Uno resets or disconnects when the arm moves</td><td>Servo power must go only to the blue terminal, never the Uno. Check the capacitor is fitted.</td></tr>
+      <tr><td>A joint hums or buzzes when it's still</td><td>It's pushing against its end stop or holding too much weight. Tighten its limits or narrow its pulse range.</td></tr>
+      <tr><td>Nothing moves, but the dashboard shows the angles changing</td><td>The 5 V supply is off, or the driver's SDA/SCL jumpers are swapped.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="servo">Servo specs (MG996R)</h2>
+  <p class="sub">Typical values. Clones vary, so trust what your servos actually do.</p>
+  <table>
+    <thead><tr><th>Spec</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Rotation</td><td>About 180°. It holds an angle rather than spinning</td></tr>
+      <tr><td>Pulse width</td><td>500–2500 µs for 0–180° (some units 1000–2000 µs). 1500 µs = 90°</td></tr>
+      <tr><td>Voltage</td><td>4.8–6.6 V (5 V supply = the weaker end)</td></tr>
+      <tr><td>Torque</td><td>About 9.4 kg·cm at 4.8 V</td></tr>
+      <tr><td>Stall current</td><td>About 2.5 A at 6 V, per servo</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Shoulder check:</strong> take the weight of everything past the shoulder, in kg, and multiply it by how far out that weight sits, in cm, with the arm stretched straight. Keep the result under about 9, and under about 5 is better.</p>
+</main>
+</body>
+</html>

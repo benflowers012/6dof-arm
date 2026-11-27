@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arm Controls</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  svg .body { fill: var(--cd); stroke: var(--fg); stroke-width: 2; }
+  svg .btn { fill: var(--cd); stroke: var(--fg); stroke-width: 1.5; }
+  svg .unused { fill: none; stroke: var(--mut); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  svg .lead { stroke: var(--mut); stroke-width: 1; fill: none; }
+  svg .act { font-weight: 700; font-size: 15px; }
+  svg .name { font-size: 12px; fill: var(--mut); }
+  svg .glyph { font-weight: 700; font-size: 13px; }
+  .stop { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← Home</a>
+  <h1>Controller</h1>
+  <p class="sub">Xbox controller plugged into the laptop, with <code>python arm.py</code> running.</p>
+
+  <div class="diagram">
+  <svg viewBox="0 0 760 420" role="img" aria-label="Xbox controller diagram. Left stick: base and shoulder. Right stick: elbow and wrist. LB and RB twist the claw. LT closes the claw, RT opens it. A runs the flip, B stops, X records, Y replays, View prints angles, Menu goes home. D-pad unused.">
+    <!-- Controller body -->
+    <path class="body" d="M205 112 Q380 84 555 112 Q635 124 664 205 Q694 300 656 350 Q628 386 588 360 L520 302 Q380 282 240 302 L172 360 Q132 386 104 350 Q66 300 96 205 Q125 124 205 112 Z"/>
+    <!-- Triggers + bumpers -->
+    <rect class="btn" x="205" y="48" width="80" height="28" rx="10"/><text class="glyph" x="245" y="67" text-anchor="middle">LT</text>
+    <rect class="btn" x="475" y="48" width="80" height="28" rx="10"/><text class="glyph" x="515" y="67" text-anchor="middle">RT</text>
+    <rect class="btn" x="190" y="84" width="110" height="20" rx="8"/><text class="glyph" x="245" y="99" text-anchor="middle">LB</text>
+    <rect class="btn" x="460" y="84" width="110" height="20" rx="8"/><text class="glyph" x="515" y="99" text-anchor="middle">RB</text>
+    <!-- Sticks -->
+    <circle class="btn" cx="240" cy="178" r="32"/><circle class="btn" cx="240" cy="178" r="20"/>
+    <circle class="btn" cx="452" cy="256" r="32"/><circle class="btn" cx="452" cy="256" r="20"/>
+    <!-- D-pad (unused) -->
+    <path class="unused" d="M300 236 h20 v-20 h20 v20 h20 v20 h-20 v20 h-20 v-20 h-20 z" transform="translate(-30 0)"/>
+    <!-- View / Xbox / Menu -->
+    <circle class="btn" cx="340" cy="172" r="11"/><text class="glyph" x="340" y="176" text-anchor="middle" font-size="10">⧉</text>
+    <circle class="unused" cx="380" cy="138" r="14"/>
+    <circle class="btn" cx="420" cy="172" r="11"/><text class="glyph" x="420" y="176" text-anchor="middle" font-size="10">≡</text>
+    <!-- ABXY -->
+    <circle class="btn" cx="522" cy="146" r="14"/><text class="glyph" x="522" y="151" text-anchor="middle" style="fill:var(--orange)">Y</text>
+    <circle class="btn" cx="492" cy="176" r="14"/><text class="glyph" x="492" y="181" text-anchor="middle" style="fill:var(--blue)">X</text>
+    <circle cx="552" cy="176" r="14" style="fill:var(--red)"/><text class="glyph" x="552" y="181" text-anchor="middle" style="fill:#fff">B</text>
+    <circle class="btn" cx="522" cy="206" r="14"/><text class="glyph" x="522" y="211" text-anchor="middle" style="fill:var(--green)">A</text>
+
+    <!-- Left-side labels -->
+    <path class="lead" d="M205 62 H150"/><text class="name" x="20" y="50">LT (hold)</text><text class="act" x="20" y="68">Close claw</text>
+    <path class="lead" d="M190 94 H150"/><text class="name" x="20" y="92">LB (hold)</text><text class="act" x="20" y="110">Twist claw ⟲</text>
+    <path class="lead" d="M208 178 H150"/><text class="name" x="20" y="166">Left stick</text><text class="act" x="20" y="184">↔ Base</text><text class="act" x="20" y="202">↕ Shoulder</text>
+    <path class="lead" d="M270 256 H150"/><text class="name" x="20" y="252">D-pad</text><text class="name" x="20" y="268">not used</text>
+    <!-- Top-center labels -->
+    <path class="lead" d="M340 161 V26"/><text class="name" x="334" y="16" text-anchor="end">View (Back)</text><text class="act" x="334" y="34" text-anchor="end">Print angles</text>
+    <path class="lead" d="M420 161 V26"/><text class="name" x="426" y="16">Menu (Start)</text><text class="act" x="426" y="34">Go home</text>
+    <!-- Right-side labels -->
+    <path class="lead" d="M555 62 H610"/><text class="name" x="740" y="50" text-anchor="end">RT (hold)</text><text class="act" x="740" y="68" text-anchor="end">Open claw</text>
+    <path class="lead" d="M570 94 H610"/><text class="name" x="740" y="92" text-anchor="end">RB (hold)</text><text class="act" x="740" y="110" text-anchor="end">Twist claw ⟳</text>
+    <path class="lead" d="M536 146 H610"/><text class="name" x="740" y="136" text-anchor="end">Y</text><text class="act" x="740" y="154" text-anchor="end">Replay last recording</text>
+    <path class="lead" d="M566 176 H610"/><text class="name" x="740" y="170" text-anchor="end">B</text><text class="act" x="740" y="188" text-anchor="end" style="fill:var(--red)">STOP</text>
+    <path class="lead" d="M536 206 H610"/><text class="name" x="740" y="206" text-anchor="end">A</text><text class="act" x="740" y="224" text-anchor="end">Run the flip</text>
+    <path class="lead" d="M484 256 H610"/><text class="name" x="740" y="250" text-anchor="end">Right stick</text><text class="act" x="740" y="268" text-anchor="end">↕ Elbow</text><text class="act" x="740" y="286" text-anchor="end">↔ Wrist</text>
+    <!-- Bottom label for X -->
+    <path class="lead" d="M492 190 V230 M492 290 V382"/><text class="name" x="492" y="398" text-anchor="middle">X</text><text class="act" x="492" y="414" text-anchor="middle">Record on / off</text>
+  </svg>
+  </div>
+
+  <h2>Moving the arm</h2>
+  <p>The sticks and triggers set <strong>speed</strong>, not position. Push a little and the joint creeps; push all the way and it moves at about 60° per second. Let go and the joint holds where it is. Every joint stops at its safe limit on its own.</p>
+  <div class="tables">
+    <table>
+      <thead><tr><th>Control</th><th>Motor</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Left stick</kbd> ↔</td><td>Base (turns the whole arm)</td></tr>
+        <tr><td><kbd>Left stick</kbd> ↕</td><td>Shoulder (lifts the arm)</td></tr>
+        <tr><td><kbd>Right stick</kbd> ↕</td><td>Elbow</td></tr>
+        <tr><td><kbd>Right stick</kbd> ↔</td><td>Wrist (tilts the claw)</td></tr>
+        <tr><td><kbd>LB</kbd> / <kbd>RB</kbd></td><td>Twist the claw left / right</td></tr>
+        <tr><td><kbd>LT</kbd> / <kbd>RT</kbd></td><td>Close / open the claw</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>A</kbd></td><td>Run the <strong>flip</strong>: grab in front, swing over the top, set it down behind</td></tr>
+        <tr><td><kbd>B</kbd></td><td><span class="stop">Stop.</span> Cancels whatever is playing; the arm holds still</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Start recording; press again to stop and save</td></tr>
+        <tr><td><kbd>Y</kbd></td><td>Replay the most recent recording</td></tr>
+        <tr><td><kbd>Menu</kbd></td><td>Go to the home pose</td></tr>
+        <tr><td><kbd>View</kbd></td><td>Print the current angles in the terminal (for tuning)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li><strong>Touching a stick also stops</strong> anything that's playing, the same as <kbd>B</kbd>.</li>
+    <li>Before a recording, the flip, or home starts, the arm first eases from wherever it is (about 1.5 s), so it never jumps.</li>
+    <li>Recordings save to <code>laptop/recordings/</code>. <kbd>Y</kbd> always plays the newest one.</li>
+    <li>A recording shorter than a blink is thrown away ("recording too short").</li>
+    <li>Unplug the controller and the program stops; the arm freezes where it is.</li>
+    <li>Stick moves a joint the wrong way, or a button does the wrong thing? That's a one-line change at the top of <code>laptop/arm.py</code>. See the <a href="guide.html#tuning">user guide</a>.</li>
+  </ul>
+</main>
+</body>
+</html>

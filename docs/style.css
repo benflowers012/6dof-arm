@@ -1,0 +1,53 @@
+/* Shared look for the arm docs. Open docs/index.html in a browser. */
+:root {
+  --w-fg: #18181b; --w-bg: #fafafa; --w-muted: #63636e; --w-line: #d4d4d8;
+  --w-card: #ffffff; --w-accent: #7c3aed; --w-warn: #b45309; --w-warn-bg: #fef3c7; --w-radius: 10px;
+  --red: #dc2626; --brown: #8b5a2b; --orange: #f59e0b; --blue: #2563eb; --green: #16a34a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --w-fg: #e4e4e7; --w-bg: #18181b; --w-muted: #a1a1aa; --w-line: #3f3f46;
+    --w-card: #232327; --w-accent: #a78bfa; --w-warn: #fbbf24; --w-warn-bg: #3a2a0a;
+    --red: #f87171; --brown: #c08a5a; --orange: #fbbf24; --blue: #60a5fa; --green: #4ade80;
+  }
+}
+:root[data-theme="dark"] {
+  --w-fg: #e4e4e7; --w-bg: #18181b; --w-muted: #a1a1aa; --w-line: #3f3f46;
+  --w-card: #232327; --w-accent: #a78bfa; --w-warn: #fbbf24; --w-warn-bg: #3a2a0a;
+  --red: #f87171; --brown: #c08a5a; --orange: #fbbf24; --blue: #60a5fa; --green: #4ade80;
+}
+/* Inside T3 the host theme variables win; standalone, our own tokens apply. */
+:root {
+  --fg: var(--foreground, var(--w-fg)); --mut: var(--muted-foreground, var(--w-muted));
+  --ln: var(--border, var(--w-line)); --cd: var(--card, var(--w-card));
+  --acc: var(--w-accent); --r: var(--radius, var(--w-radius));
+}
+body {
+  margin: 0; padding: 16px; color: var(--fg);
+  background: var(--background, var(--w-bg));
+  font: 15px/1.55 var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+main { max-width: 900px; margin: 0 auto; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 32px 0 8px; }
+h3 { font-size: 15px; margin: 20px 0 6px; }
+a { color: var(--acc); }
+p.sub { color: var(--mut); margin: 0 0 16px; }
+.back { display: inline-block; margin-bottom: 16px; text-decoration: none; font-weight: 600; padding: 6px 12px 6px 8px; border: 1px solid var(--ln); border-radius: 999px; }
+.back:hover { background: var(--cd); }
+.warn { border-left: 4px solid var(--w-warn); background: var(--w-warn-bg); padding: 12px 16px; border-radius: 0 var(--r) var(--r) 0; margin: 16px 0; }
+.warn strong { color: var(--w-warn); }
+.box { border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); padding: 16px; }
+.diagram { overflow-x: auto; border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); padding: 8px; }
+.diagram svg { display: block; width: 100%; min-width: 600px; height: auto; }
+svg text { fill: var(--fg); font-family: inherit; }
+svg .muted { fill: var(--mut); }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--ln); vertical-align: top; }
+th { color: var(--mut); font-weight: 600; font-size: 13px; }
+.tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+kbd { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; font-weight: 700; border: 1px solid var(--ln); border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; background: var(--cd); white-space: nowrap; }
+code, pre { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; }
+pre { background: var(--code-background, var(--cd)); border: 1px solid var(--ln); border-radius: var(--r); padding: 12px 14px; overflow-x: auto; }
+ol li, ul li { margin: 4px 0; }

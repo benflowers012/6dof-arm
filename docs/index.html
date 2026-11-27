@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Arm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero { display: flex; gap: 16px; align-items: center; margin-bottom: 8px; }
+  .hero img { width: 56px; height: 56px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 20px; }
+  .card { display: block; text-decoration: none; color: inherit; border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); padding: 18px; transition: border-color .15s, transform .15s; }
+  .card:hover { border-color: var(--acc); transform: translateY(-2px); }
+  .card .t { font-weight: 700; font-size: 17px; margin: 6px 0 4px; color: var(--acc); }
+  .card .d { color: var(--mut); font-size: 14px; }
+  .card svg { width: 28px; height: 28px; stroke: var(--acc); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  ol.quick li { margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <img src="../assets/icon.svg" alt="">
+    <div>
+      <h1>Robot arm</h1>
+      <p class="sub" style="margin:0">6-servo arm · Xbox controller · record, replay and a one-button flip</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="controls.html">
+      <svg viewBox="0 0 24 24"><path d="M6 8h12a4 4 0 0 1 4 4v2a3 3 0 0 1-5.3 1.9L15 14H9l-1.7 1.9A3 3 0 0 1 2 14v-2a4 4 0 0 1 4-4z"/><path d="M7 11v2M6 12h2"/><circle cx="16" cy="11" r=".6"/><circle cx="18" cy="13" r=".6"/></svg>
+      <div class="t">Controls</div>
+      <div class="d">Which stick moves which motor, and what every button does.</div>
+    </a>
+    <a class="card" href="guide.html">
+      <svg viewBox="0 0 24 24"><path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h6M8 13h6"/></svg>
+      <div class="t">User guide</div>
+      <div class="d">Setup, first power-on, running, the debug dashboard, tuning, troubleshooting.</div>
+    </a>
+    <a class="card" href="wiring.html">
+      <svg viewBox="0 0 24 24"><path d="M4 7h6v10H4zM14 7h6v10h-6z"/><path d="M10 10h4M10 14h4"/></svg>
+      <div class="t">Wiring</div>
+      <div class="d">Diagram of the power supply, servo driver, servos and Uno, plus wiring steps.</div>
+    </a>
+    <a class="card" href="guide.html#flip">
+      <svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M17 12l3 4 3-3"/></svg>
+      <div class="t">Tuning the flip</div>
+      <div class="d">Teach the arm the real angles for the grab, swing-over and set-down.</div>
+    </a>
+    <a class="card" href="guide.html#trouble">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+      <div class="t">Troubleshooting</div>
+      <div class="d">Error messages, jittery servos, resets, and what to do about them.</div>
+    </a>
+    <a class="card" href="guide.html#servo">
+      <svg viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="2"/><circle cx="12" cy="10" r="2"/><path d="M9 15h6"/></svg>
+      <div class="t">Servo specs</div>
+      <div class="d">MG996R range, pulse width, torque, and the shoulder weight check.</div>
+    </a>
+  </div>
+
+  <h2>Quick start</h2>
+  <ol class="quick">
+    <li>Wire it up: <a href="wiring.html">Wiring</a>.</li>
+    <li>Upload <code>firmware/arm/arm.ino</code> with the 5 V supply unplugged.</li>
+    <li>Move the arm by hand to roughly home, then plug in the 5 V supply.</li>
+    <li>Plug in the controller, then run <code>cd laptop</code> and <code>python arm.py</code>. The debug dashboard opens in your browser.</li>
+    <li>Drive with the sticks. Press <kbd>A</kbd> to flip and <kbd>B</kbd> to stop.</li>
+  </ol>
+</main>
+</body>
+</html>

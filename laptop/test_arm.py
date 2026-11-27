@@ -154,6 +154,19 @@ def test_connect_starts_from_current_pose_without_reset():
     assert link.limits == LIM and link.start_pose == [150, 40, 90, 90, 0, 90]
 
 
+def test_dashboard_serves_page_and_state():
+    import urllib.request
+    from dashboard import serve
+
+    srv, url = serve(lambda: {"joints": [], "mode": "teleop"}, port=0)
+    try:
+        state = json.loads(urllib.request.urlopen(url + "state", timeout=2).read())
+        assert state == {"joints": [], "mode": "teleop"}
+        assert b"<html" in urllib.request.urlopen(url, timeout=2).read()
+    finally:
+        srv.shutdown()
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):
