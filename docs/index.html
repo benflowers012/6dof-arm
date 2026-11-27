@@ -22,6 +22,7 @@
   .dl .hint { font-size: 13px; color: var(--mut); }
   .btn-dl { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 8px; background: var(--acc); color: #fff; font-weight: 600; text-decoration: none; }
   .btn-dl:hover { filter: brightness(1.1); }
+  .btn-dl.alt { background: transparent; color: var(--acc); border: 1px solid var(--acc); }
   .btn-dl svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .viewer .hint { margin: 0; padding: 8px 14px; font-size: 13px; color: var(--mut); border-top: 1px solid var(--ln); }
 </style>
@@ -51,7 +52,11 @@
       <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
       Download CAD model (.glb)
     </a>
-    <span class="hint">Designed in Onshape. Opens in Windows 3D Viewer, Blender, or any glTF viewer.</span>
+    <a class="btn-dl alt" href="6dof-arm.stl" download="6dof-arm.stl">
+      <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+      Download STL
+    </a>
+    <span class="hint">Designed in Onshape. The .glb keeps colors and parts (Windows 3D Viewer, Blender); the STL opens in any slicer or CAD program.</span>
   </div>
 
   <div class="cards">
