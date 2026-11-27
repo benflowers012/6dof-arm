@@ -1,6 +1,6 @@
 <img src="assets/icon.svg" width="64" height="64" alt="">
 
-# robotics arm type splish
+# 6dof-arm
 
 A 6-servo desktop robot arm for a class project. Drive it live with an Xbox controller, record moves and play them back, or press one button to run the **flip**: grab an object in front, swing it backwards over the top, and set it down behind the arm, still upright.
 
