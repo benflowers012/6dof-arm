@@ -18,6 +18,11 @@
   .viewer { margin-top: 20px; border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); overflow: hidden; }
   .viewer model-viewer { display: block; width: 100%; height: clamp(300px, 55vw, 480px); --poster-color: transparent; }
   .viewer .loading { display: flex; height: 100%; align-items: center; justify-content: center; color: var(--mut); }
+  .dl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+  .dl .hint { font-size: 13px; color: var(--mut); }
+  .btn-dl { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 8px; background: var(--acc); color: #fff; font-weight: 600; text-decoration: none; }
+  .btn-dl:hover { filter: brightness(1.1); }
+  .btn-dl svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .viewer .hint { margin: 0; padding: 8px 14px; font-size: 13px; color: var(--mut); border-top: 1px solid var(--ln); }
 </style>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
@@ -40,6 +45,13 @@
       <div class="loading" slot="poster">Loading 3D model…</div>
     </model-viewer>
     <p class="hint">Drag to rotate · scroll or pinch to zoom · right-drag or two-finger drag to move</p>
+  </div>
+  <div class="dl">
+    <a class="btn-dl" href="arm.glb" download="6dof-arm.glb">
+      <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+      Download CAD model (.glb)
+    </a>
+    <span class="hint">Designed in Onshape. Opens in Windows 3D Viewer, Blender, or any glTF viewer.</span>
   </div>
 
   <div class="cards">
