@@ -6,7 +6,7 @@ A 6-servo desktop robot arm for a class project. Drive it live with an Xbox cont
 
 The laptop does the thinking (`laptop/arm.py`). The Arduino Uno (`firmware/arm/arm.ino`) keeps every joint inside its safe range, moves the servos smoothly, and freezes the arm if the laptop stops talking.
 
-**Docs:** open [`docs/index.html`](docs/index.html) in a browser for the home page, with links to controls, the user guide, wiring, tuning and troubleshooting.
+**Docs:** double-click **`Open Docs.html`** in the project folder (or open [`docs/index.html`](docs/index.html)) in a browser for the home page, with links to controls, the user guide, wiring, tuning and troubleshooting.
 
 ## Parts
 
