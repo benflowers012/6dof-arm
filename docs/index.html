@@ -34,8 +34,10 @@
 
   <div class="viewer">
     <model-viewer src="arm.glb" alt="3D model of the robot arm" camera-controls auto-rotate
-      auto-rotate-delay="2000" interaction-prompt="none" shadow-intensity="0.8" exposure="1.1"
-      touch-action="pan-y">
+      auto-rotate-delay="4000" rotation-per-second="12deg" interaction-prompt="none"
+      camera-orbit="35deg 65deg auto" min-camera-orbit="auto auto auto"
+      environment-image="neutral" tone-mapping="neutral" exposure="1"
+      shadow-intensity="1" shadow-softness="0.7" touch-action="pan-y">
       <div class="loading" slot="poster">Loading 3D model…</div>
     </model-viewer>
     <p class="hint">Drag to rotate · scroll or pinch to zoom · right-drag or two-finger drag to move</p>
