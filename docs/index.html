@@ -15,7 +15,12 @@
   .card .d { color: var(--mut); font-size: 14px; }
   .card svg { width: 28px; height: 28px; stroke: var(--acc); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   ol.quick li { margin: 6px 0; }
+  .viewer { margin-top: 20px; border: 1px solid var(--ln); border-radius: var(--r); background: var(--cd); overflow: hidden; }
+  .viewer model-viewer { display: block; width: 100%; height: clamp(300px, 55vw, 480px); --poster-color: transparent; }
+  .viewer .loading { display: flex; height: 100%; align-items: center; justify-content: center; color: var(--mut); }
+  .viewer .hint { margin: 0; padding: 8px 14px; font-size: 13px; color: var(--mut); border-top: 1px solid var(--ln); }
 </style>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
 <main>
@@ -25,6 +30,15 @@
       <h1>Robot arm</h1>
       <p class="sub" style="margin:0">6-servo arm · Xbox controller · record, replay and a one-button flip</p>
     </div>
+  </div>
+
+  <div class="viewer">
+    <model-viewer src="arm.glb" alt="3D model of the robot arm" camera-controls auto-rotate
+      auto-rotate-delay="2000" interaction-prompt="none" shadow-intensity="0.8" exposure="1.1"
+      touch-action="pan-y">
+      <div class="loading" slot="poster">Loading 3D model…</div>
+    </model-viewer>
+    <p class="hint">Drag to rotate · scroll or pinch to zoom · right-drag or two-finger drag to move</p>
   </div>
 
   <div class="cards">
